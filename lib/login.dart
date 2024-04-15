@@ -1,10 +1,11 @@
-import 'dart:convert';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+
+
+import 'package:demoapi/api.dart';
 import 'package:demoapi/dashboard.dart';
+import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+  const LoginPage({super.key});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -12,166 +13,135 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
+  bool showButton = false;
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  String username = '';
+  String password = '';
 
-  Future<void> _login(BuildContext context) async {
-    // Check if email and password controllers are not empty
-    if (emailController.text.isNotEmpty && passwordController.text.isNotEmpty) {
-      // API endpoint URL
-      var url = Uri.parse('https://www.demo.odofortius.in/rest_api/users_login');
-
-      // Request body
-      var body = {
-        'users_email': emailController.text,
-        'password': passwordController.text,
-      };
-
-      // API call
-      var response = await http.post(
-        url,
-        body: body,
-      );
-
-      if (response.statusCode == 200) {
-        var jsonResponse = json.decode(response.body);
-        if (jsonResponse is Map<String, dynamic>) {
-          if (jsonResponse.containsKey('status') && jsonResponse['status'] == 'success') {
-            // Navigate to Dashboard screen on successful login
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const Dashboard()),
-            );
-            return;
-          } else if (jsonResponse.containsKey('message')) {
-            // Handle login failure (display error message, etc.)
-            showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  title: const Text('Login Failed'),
-                  content: Text(jsonResponse['message'].toString()), // Convert to string
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: const Text('OK'),
-                    ),
-                  ],
-                );
-              },
-            );
-            return;
-          }
-        }
-      } else {
-        // Handle API request failure
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text('Error'),
-              content: const Text('Failed to connect to the server.'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('OK'),
-                ),
-              ],
-            );
-          },
-        );
-      }
-    } else {
-      // Handle empty values in text controllers
-      if (emailController.text.isEmpty) {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text('Error'),
-              content: const Text('Please enter your email.'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('OK'),
-                ),
-              ],
-            );
-          },
-        );
-      } else if (passwordController.text.isEmpty) {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text('Error'),
-              content: const Text('Please enter your password.'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('OK'),
-                ),
-              ],
-            );
-          },
-        );
-      }
+  userLogin(context) async {
+    Map res = await HttpService().postWithBody('/rest_api/users_login',
+        {"users_email": username.toString(), "password": password.toString()});
+    if (res["data"]["Status"] == "Success") {
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => const Dashboard()));
+      _showAlertDialog(context, 'Error', 'Login failed. Please try again.');
     }
   }
 
-
-
+  void _showAlertDialog(BuildContext context, String title, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Login'),
+        title: const Center(child: Text('Login')),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: Center(
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              TextFormField(
-                controller: emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  return null;
-                },
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 370,
+                child: TextFormField(
+                  controller: emailController,
+                  decoration: InputDecoration(
+                    hintText: 'Email',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onChanged: (value) {
+                    username = value;
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter an email';
+                    }
+                    return null;
+                  },
+                ),
               ),
-              TextFormField(
-                controller: passwordController,
-                decoration: const InputDecoration(labelText: 'Password'),
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your password';
-                  }
-                  return null;
-                },
+              const SizedBox(height: 25),
+              SizedBox(
+                width: 370,
+                child: TextFormField(
+                  controller: passwordController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    hintText: 'Password',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onChanged: (value) {
+                    password = value;
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a password';
+                    }
+                    return null;
+                  },
+                ),
               ),
-              const SizedBox(height: 16.0),
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    _login(context); // Pass the context to _login method
-                  }
-                },
-                child: Text('Login'),
+              const SizedBox(height: 25),
+              SizedBox(
+                width: 290,
+                height: 40,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                  ),
+                  onPressed: showButton
+                      ? () {}
+                      : () async {
+                    if (_formKey.currentState!.validate()) {
+                      setState(() {
+                        showButton = true;
+                      });
+                      userLogin(context);
+                    }
+                  },
+                  child: showButton
+                      ? const SizedBox(
+                    height: 15,
+                    width: 15,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                    ),
+                  )
+                      : const Text(
+                    'Login',
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
               ),
+              const SizedBox(height: 20),
+              // Text(message), // Display login message
             ],
           ),
         ),

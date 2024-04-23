@@ -1,32 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'api.dart';
-
-class NavBar extends StatefulWidget {
+class NavBar extends StatelessWidget {
   const NavBar({super.key});
-
-  @override
-  State<NavBar> createState() => _NavBarState();
-}
-
-class _NavBarState extends State<NavBar> {
-
-  @override
-  void initState() {
-    super.initState();
-    _getLoginData();
-  }
-
-
-  _getLoginData() async {
-    final res = await HttpService().postWithBody(
-        '/rest_api/users_login', {"users_email": "username", });
-    if (res["status"] == 200) {
-      setState(() {
-
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {

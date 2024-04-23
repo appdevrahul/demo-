@@ -24,7 +24,7 @@ class _LoginPageState extends State<LoginPage> {
         {"users_email": username.toString(), "password": password.toString()});
     if (res["data"]["Status"] == "Success") {
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => const Dashboard()));
+          context, MaterialPageRoute(builder: (context) => const MyDashboard()));
       _showAlertDialog(context, 'Error', 'Login failed. Please try again.');
     }
   }
